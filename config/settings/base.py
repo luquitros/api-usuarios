@@ -4,9 +4,29 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding='utf-8').splitlines():
+        content = line.strip()
+        if not content or content.startswith('#') or '=' not in content:
+            continue
+        key, value = content.split('=', 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv(BASE_DIR / '.env')
+
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-only-secret-key-change-me')
 DEBUG = False
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if os.getenv('DJANGO_ALLOWED_HOSTS') else []
+CSRF_TRUSTED_ORIGINS = (
+    os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS')
+    else []
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -81,6 +101,16 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('DRF_THROTTLE_ANON', '60/min'),
+        'user': os.getenv('DRF_THROTTLE_USER', '120/min'),
+        'login': os.getenv('DRF_THROTTLE_LOGIN', '10/min'),
+    },
 }
 
 SPECTACULAR_SETTINGS = {

@@ -27,3 +27,24 @@ class AuthApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+
+    def test_logout_blacklists_refresh_token(self):
+        login_response = self.client.post(
+            '/login/',
+            {
+                'username': 'teacher',
+                'password': 'Teacher123!',
+            },
+            format='json',
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+        logout_response = self.client.post(
+            '/logout/',
+            {
+                'refresh': login_response.data['refresh'],
+            },
+            format='json',
+        )
+
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)

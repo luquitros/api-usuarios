@@ -1,5 +1,10 @@
 # Users API
 
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Django](https://img.shields.io/badge/Django-REST-green)
+![JWT](https://img.shields.io/badge/Auth-JWT-orange)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+
 API de usuarios com Django REST Framework e autenticacao JWT.
 
 Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de perfis com diferentes tipos de usuario, como `aluno`, `professor` e `admin`.
@@ -9,8 +14,10 @@ Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de per
 - Cadastro de usuarios com criacao automatica de perfil
 - Login com JWT
 - Refresh de token
+- Logout com blacklist de refresh token
 - Endpoint `me/` para consultar e editar o proprio perfil
 - Controle de acesso por tipo de usuario
+- Throttle para login e requisicoes gerais
 - Swagger UI para documentacao interativa
 - Estrutura pronta para Django Admin
 - Testes basicos da API
@@ -70,6 +77,7 @@ Base sugerida: `/`
 ### Autenticacao
 
 - `POST /login/` -> gera `access` e `refresh`
+- `POST /logout/` -> invalida `refresh` token (blacklist)
 - `POST /refresh/` -> renova o token de acesso
 
 ### Documentacao
@@ -152,20 +160,28 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Criar migracoes
+### 3. Configurar variaveis de ambiente
+
+Use o arquivo de exemplo como base:
+
+```bash
+copy .env.example .env
+```
+
+### 4. Criar migracoes
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 4. Criar superusuario
+### 5. Criar superusuario
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 5. Rodar o servidor
+### 6. Rodar o servidor
 
 ```bash
 python manage.py runserver
@@ -176,7 +192,7 @@ Por padrao o projeto usa `config.settings.dev`.
 Para rodar com outro ambiente:
 
 ```bash
-set DJANGO_SETTINGS_MODULE=config.settings.prod
+$env:DJANGO_SETTINGS_MODULE="config.settings.prod"
 python manage.py runserver
 ```
 
@@ -189,6 +205,23 @@ Se quiser acessar rotas protegidas, envie o token no header:
 ```text
 Authorization: Bearer seu-access-token
 ```
+
+Para fazer logout (blacklist), envie o `refresh` token:
+
+```json
+{
+  "refresh": "seu-refresh-token"
+}
+```
+
+## Seguranca e configuracao
+
+- `prod.py` exige `DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS`
+- HTTPS forcado em producao com `SECURE_SSL_REDIRECT`
+- Cookies de sessao e CSRF marcados como `secure` em producao
+- HSTS habilitado em producao
+- Throttle configurado para reduzir abuso de login e flooding
+- Carregamento de `.env` nativo para facilitar setup seguro
 
 ## Permissoes
 
@@ -207,10 +240,12 @@ python manage.py test
 
 ## Proximos passos
 
-- Adicionar documentacao Swagger/OpenAPI
-- Implementar logout com blacklist de tokens
 - Adicionar filtros e busca
 - Criar endpoints para dominio escolar, como turmas, disciplinas e matriculas
+
+## Licenca
+
+Este projeto usa a licenca MIT. Veja [LICENSE](LICENSE).
 
 ## Autor
 
