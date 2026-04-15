@@ -27,15 +27,25 @@ Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de per
 
 ```text
 .
-|-- admin.py
-|-- apps.py
-|-- models.py
-|-- permissions.py
-|-- serializers.py
-|-- settings.py
-|-- tests.py
-|-- urls.py
-|-- views.py
+|-- manage.py
+|-- config/
+|   |-- urls.py
+|   |-- asgi.py
+|   |-- wsgi.py
+|   `-- settings/
+|       |-- base.py
+|       |-- dev.py
+|       `-- prod.py
+|-- users/
+|   |-- admin.py
+|   |-- apps.py
+|   |-- models.py
+|   |-- permissions.py
+|   |-- serializers.py
+|   |-- urls.py
+|   |-- views.py
+|   |-- migrations/
+|   `-- tests/
 |-- README.md
 ```
 
@@ -158,6 +168,15 @@ python manage.py createsuperuser
 ### 5. Rodar o servidor
 
 ```bash
+python manage.py runserver
+```
+
+Por padrao o projeto usa `config.settings.dev`.
+
+Para rodar com outro ambiente:
+
+```bash
+set DJANGO_SETTINGS_MODULE=config.settings.prod
 python manage.py runserver
 ```
 
