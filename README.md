@@ -1,5 +1,10 @@
 # Users API
 
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Django](https://img.shields.io/badge/Django-REST-green)
+![JWT](https://img.shields.io/badge/Auth-JWT-orange)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+
 API de usuarios com Django REST Framework e autenticacao JWT.
 
 Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de perfis com diferentes tipos de usuario, como `aluno`, `professor` e `admin`.
