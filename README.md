@@ -11,6 +11,7 @@ Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de per
 - Refresh de token
 - Endpoint `me/` para consultar e editar o proprio perfil
 - Controle de acesso por tipo de usuario
+- Swagger UI para documentacao interativa
 - Estrutura pronta para Django Admin
 - Testes basicos da API
 
@@ -20,6 +21,7 @@ Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de per
 - Django
 - Django REST Framework
 - Simple JWT
+- drf-spectacular
 
 ## Estrutura
 
@@ -59,6 +61,11 @@ Base sugerida: `/`
 
 - `POST /login/` -> gera `access` e `refresh`
 - `POST /refresh/` -> renova o token de acesso
+
+### Documentacao
+
+- `GET /schema/` -> schema OpenAPI
+- `GET /docs/` -> Swagger UI
 
 ### Usuarios
 
@@ -132,7 +139,7 @@ source .venv/bin/activate
 ### 2. Instalar dependencias
 
 ```bash
-pip install django djangorestframework djangorestframework-simplejwt
+pip install -r requirements.txt
 ```
 
 ### 3. Criar migracoes
@@ -169,6 +176,7 @@ Authorization: Bearer seu-access-token
 - Usuarios nao autenticados podem se cadastrar
 - Usuarios comuns podem visualizar e editar apenas os proprios dados
 - Usuarios `admin` podem listar e gerenciar todos os usuarios
+- Apenas administradores podem criar ou promover usuarios com `user_type = admin`
 
 ## Testes
 

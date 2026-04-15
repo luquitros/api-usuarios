@@ -66,3 +66,20 @@ class UserApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(response.data), 2)
+
+    def test_public_signup_cannot_create_admin_user(self):
+        response = self.client.post(
+            '/users/',
+            {
+                'username': 'intruder',
+                'password': 'Intruder123!',
+                'email': 'intruder@example.com',
+                'profile': {
+                    'user_type': 'admin',
+                },
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('profile', response.data)

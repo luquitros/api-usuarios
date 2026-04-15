@@ -10,6 +10,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['user_type', 'phone', 'birth_date', 'bio', 'avatar_url']
 
+    def validate_user_type(self, value):
+        request = self.context.get('request')
+        is_admin_request = bool(
+            request
+            and request.user.is_authenticated
+            and hasattr(request.user, 'profile')
+            and request.user.profile.user_type == 'admin'
+        )
+
+        if value == 'admin' and not is_admin_request:
+            raise serializers.ValidationError(
+                'Somente administradores podem criar ou promover usuarios para admin.'
+            )
+
+        return value
+
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
