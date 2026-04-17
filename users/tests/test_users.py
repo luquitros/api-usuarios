@@ -2,9 +2,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from users.models import Profile
-
-
 class UserApiTests(APITestCase):
     def setUp(self):
         self.admin_user = User.objects.create_user(
@@ -12,14 +9,16 @@ class UserApiTests(APITestCase):
             password='Admin123!',
             email='admin@example.com',
         )
-        Profile.objects.create(user=self.admin_user, user_type='admin')
+        self.admin_user.profile.user_type = 'admin'
+        self.admin_user.profile.save()
 
         self.student_user = User.objects.create_user(
             username='student',
             password='Student123!',
             email='student@example.com',
         )
-        Profile.objects.create(user=self.student_user, user_type='aluno')
+        self.student_user.profile.user_type = 'aluno'
+        self.student_user.profile.save()
 
     def test_signup_creates_profile(self):
         response = self.client.post(
@@ -103,3 +102,30 @@ class UserApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['username'], 'student')
+
+    def test_user_can_patch_self_with_same_email(self):
+        self.client.force_authenticate(user=self.student_user)
+
+        response = self.client.patch(
+            '/users/me/',
+            {
+                'email': 'student@example.com',
+                'first_name': 'Student',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['email'], 'student@example.com')
+
+    def test_superuser_is_treated_as_admin_in_api(self):
+        superuser = User.objects.create_superuser(
+            username='root',
+            password='Root123!Pass',
+            email='root@example.com',
+        )
+        self.client.force_authenticate(user=superuser)
+
+        response = self.client.get('/users/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

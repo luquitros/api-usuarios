@@ -48,10 +48,20 @@ class UserSerializer(serializers.ModelSerializer):
         validate_password(value)
         return value
 
+    def validate_email(self, value):
+        """Validate email uniqueness, ignoring current instance on update."""
+        queryset = User.objects.filter(email__iexact=value)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('Este email ja esta registrado.')
+        return value
+
     def create(self, validated_data):
         profile_data = validated_data.pop('profile')
         user = User.objects.create_user(**validated_data)
-        Profile.objects.create(user=user, **profile_data)
+        # Avoid OneToOne conflicts when profile is auto-created by signals.
+        Profile.objects.update_or_create(user=user, defaults=profile_data)
         return user
 
     def update(self, instance, validated_data):
