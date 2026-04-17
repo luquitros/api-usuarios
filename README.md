@@ -17,6 +17,7 @@ Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de per
 - Logout com blacklist de refresh token
 - Endpoint `me/` para consultar e editar o proprio perfil
 - Controle de acesso por tipo de usuario
+- Paginacao, busca, filtros e ordenacao no endpoint de usuarios
 - Throttle para login e requisicoes gerais
 - Swagger UI para documentacao interativa
 - Estrutura pronta para Django Admin
@@ -89,6 +90,9 @@ Base sugerida: `/`
 
 - `POST /users/` -> cria um novo usuario
 - `GET /users/` -> lista usuarios, apenas para `admin`
+- `GET /users/?profile__user_type=aluno` -> filtra por tipo de perfil
+- `GET /users/?search=student` -> busca por username/email/nome
+- `GET /users/?ordering=username` -> ordena resultados
 - `GET /users/{id}/` -> detalhe do usuario
 - `PATCH /users/{id}/` -> atualiza usuario
 - `DELETE /users/{id}/` -> remove usuario, apenas para `admin`
@@ -221,7 +225,9 @@ Para fazer logout (blacklist), envie o `refresh` token:
 - Cookies de sessao e CSRF marcados como `secure` em producao
 - HSTS habilitado em producao
 - Throttle configurado para reduzir abuso de login e flooding
+- Tokens JWT com expiracao configuravel, rotacao e blacklist
 - Carregamento de `.env` nativo para facilitar setup seguro
+- Resposta de erro padronizada para facilitar debug e frontend
 
 ## Permissoes
 

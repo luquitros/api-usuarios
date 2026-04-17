@@ -65,7 +65,8 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 2)
+        self.assertIn('results', response.data)
+        self.assertGreaterEqual(len(response.data['results']), 2)
 
     def test_public_signup_cannot_create_admin_user(self):
         response = self.client.post(
@@ -82,4 +83,23 @@ class UserApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('profile', response.data)
+        self.assertIn('errors', response.data)
+        self.assertIn('profile', response.data['errors'])
+
+    def test_admin_can_filter_users_by_user_type(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get('/users/?profile__user_type=aluno')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['username'], 'student')
+
+    def test_admin_can_search_users(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get('/users/?search=student')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['username'], 'student')

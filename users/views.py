@@ -11,6 +11,10 @@ from .permissions import IsAdminOrSelf, IsAdminUserType
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    filterset_fields = ['profile__user_type']
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+    ordering_fields = ['id', 'username', 'email', 'first_name', 'last_name']
+    ordering = ['id']
 
     def get_queryset(self):
         user = self.request.user
