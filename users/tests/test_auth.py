@@ -23,8 +23,8 @@ class AuthApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('access', response.data)
-        self.assertIn('refresh', response.data)
+        self.assertIn('access', response.data['data'])
+        self.assertIn('refresh', response.data['data'])
 
     def test_logout_blacklists_refresh_token(self):
         login_response = self.client.post(
@@ -40,9 +40,23 @@ class AuthApiTests(APITestCase):
         logout_response = self.client.post(
             '/logout/',
             {
-                'refresh': login_response.data['refresh'],
+                'refresh': login_response.data['data']['refresh'],
             },
             format='json',
         )
 
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(logout_response.data['success'])
+
+    def test_login_with_invalid_credentials_returns_friendly_message(self):
+        response = self.client.post(
+            '/login/',
+            {
+                'username': 'teacher',
+                'password': 'wrong-password',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['message'], 'Credenciais invalidas. Verifique usuario e senha.')

@@ -41,6 +41,8 @@ class UserApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         created_user = User.objects.get(username='teacher')
         self.assertEqual(created_user.profile.user_type, 'professor')
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['username'], 'teacher')
 
     def test_me_returns_authenticated_user_data(self):
         self.client.force_authenticate(user=self.student_user)
@@ -48,8 +50,8 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/me/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], 'student')
-        self.assertEqual(response.data['profile']['user_type'], 'aluno')
+        self.assertEqual(response.data['data']['username'], 'student')
+        self.assertEqual(response.data['data']['profile']['user_type'], 'aluno')
 
     def test_non_admin_cannot_list_users(self):
         self.client.force_authenticate(user=self.student_user)
@@ -57,6 +59,7 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['message'], 'Voce nao tem permissao para executar esta acao.')
 
     def test_admin_can_list_users(self):
         self.client.force_authenticate(user=self.admin_user)
@@ -64,8 +67,9 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('results', response.data)
-        self.assertGreaterEqual(len(response.data['results']), 2)
+        self.assertIn('data', response.data)
+        self.assertIn('items', response.data['data'])
+        self.assertGreaterEqual(len(response.data['data']['items']), 2)
 
     def test_public_signup_cannot_create_admin_user(self):
         response = self.client.post(
@@ -82,6 +86,7 @@ class UserApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['message'], 'Dados invalidos. Revise os campos e tente novamente.')
         self.assertIn('errors', response.data)
         self.assertIn('profile', response.data['errors'])
 
@@ -91,8 +96,8 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/?profile__user_type=aluno')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['username'], 'student')
+        self.assertEqual(len(response.data['data']['items']), 1)
+        self.assertEqual(response.data['data']['items'][0]['username'], 'student')
 
     def test_admin_can_search_users(self):
         self.client.force_authenticate(user=self.admin_user)
@@ -100,8 +105,8 @@ class UserApiTests(APITestCase):
         response = self.client.get('/users/?search=student')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['username'], 'student')
+        self.assertEqual(len(response.data['data']['items']), 1)
+        self.assertEqual(response.data['data']['items'][0]['username'], 'student')
 
     def test_user_can_patch_self_with_same_email(self):
         self.client.force_authenticate(user=self.student_user)
@@ -116,7 +121,7 @@ class UserApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['email'], 'student@example.com')
+        self.assertEqual(response.data['data']['email'], 'student@example.com')
 
     def test_superuser_is_treated_as_admin_in_api(self):
         superuser = User.objects.create_superuser(
