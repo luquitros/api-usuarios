@@ -244,11 +244,6 @@ Para executar os testes:
 python manage.py test
 ```
 
-## Proximos passos
-
-- Adicionar filtros e busca
-- Criar endpoints para dominio escolar, como turmas, disciplinas e matriculas
-
 ## Licenca
 
 Este projeto usa a licenca MIT. Veja [LICENSE](LICENSE).
