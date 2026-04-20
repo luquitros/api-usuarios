@@ -1,136 +1,35 @@
-# Users API
+﻿# Users API
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Django](https://img.shields.io/badge/Django-REST-green)
 ![JWT](https://img.shields.io/badge/Auth-JWT-orange)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-API de usuarios com Django REST Framework + JWT.
+API de usuarios com Django REST Framework e autenticacao JWT.
 
-Foco do projeto:
-- onboarding rapido para quem vai consumir a API
-- autenticacao com fluxo completo (`login` -> `refresh` -> `logout`)
-- perfil por tipo de usuario (`aluno`, `professor`, `admin`)
-- respostas padronizadas para facilitar frontend/mobile
+Este projeto fornece uma base para cadastro, autenticacao e gerenciamento de perfis com diferentes tipos de usuario, como `aluno`, `professor` e `admin`.
 
-## Inicio rapido
+## Funcionalidades
 
-### 1) Rodar localmente
+- Cadastro de usuarios com criacao automatica de perfil
+- Login com JWT
+- Refresh de token
+- Logout com blacklist de refresh token
+- Endpoint `me/` para consultar e editar o proprio perfil
+- Controle de acesso por tipo de usuario
+- Paginacao, busca, filtros e ordenacao no endpoint de usuarios
+- Throttle para login e requisicoes gerais
+- Swagger UI para documentacao interativa
+- Estrutura pronta para Django Admin
+- Testes basicos da API
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
-python manage.py makemigrations
-python manage.py migrate
-python manage.py runserver
-```
+## Tecnologias
 
-### 2) Abrir os links principais
-
-- Home da API: `GET /`
-- Swagger UI: `GET /docs/`
-- OpenAPI schema: `GET /schema/`
-
-### 3) Fluxo minimo de autenticacao
-
-1. `POST /login/` para pegar `access` e `refresh`
-2. usar `Authorization: Bearer <access>` nas rotas protegidas
-3. `POST /refresh/` quando o `access` expirar
-4. `POST /logout/` para invalidar o `refresh`
-
-## Endpoints principais
-
-### Auth
-
-- `POST /login/`
-- `POST /refresh/`
-- `POST /logout/`
-
-### Users
-
-- `POST /users/` (cadastro publico)
-- `GET /users/` (somente admin)
-- `GET /users/{id}/`
-- `PATCH /users/{id}/`
-- `DELETE /users/{id}/` (somente admin)
-- `GET /users/me/`
-- `PATCH /users/me/`
-
-Filtros no list:
-- `?profile__user_type=aluno`
-- `?search=student`
-- `?ordering=username`
-
-## Contrato de resposta
-
-### Sucesso
-
-```json
-{
-  "success": true,
-  "message": "OK",
-  "data": {}
-}
-```
-
-### Erro
-
-```json
-{
-  "success": false,
-  "message": "Dados invalidos. Revise os campos e tente novamente.",
-  "status_code": 400,
-  "path": "/users/",
-  "errors": {
-    "profile": {
-      "user_type": [
-        "Somente administradores podem criar ou promover usuarios para admin."
-      ]
-    }
-  }
-}
-```
-
-## Exemplo rapido
-
-### Login request
-
-```json
-{
-  "username": "teacher",
-  "password": "Teacher123!"
-}
-```
-
-### Login response
-
-```json
-{
-  "success": true,
-  "message": "Login successful.",
-  "data": {
-    "refresh": "seu-refresh-token",
-    "access": "seu-access-token"
-  }
-}
-```
-
-## Permissoes
-
-- nao autenticado: pode cadastrar usuario
-- usuario comum: acessa e edita apenas o proprio registro
-- admin: lista e gerencia todos os usuarios
-- `superuser` do Django tambem e tratado como admin da API
-
-## Seguranca e config
-
-- JWT com expiracao configuravel, rotacao e blacklist
-- throttling para reduzir abuso de login/requisicoes
-- CORS por ambiente (`dev` e `prod`)
-- `prod.py` exige `DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS`
-- cookies/headers de seguranca reforcados em producao
+- Python
+- Django
+- Django REST Framework
+- Simple JWT
+- drf-spectacular
 
 ## Estrutura
 
@@ -158,12 +57,202 @@ Filtros no list:
 |-- README.md
 ```
 
+## Modelos
+
+### `Profile`
+
+Perfil vinculado ao `User` padrao do Django.
+
+Campos principais:
+
+- `user_type`: `aluno`, `professor` ou `admin`
+- `phone`
+- `birth_date`
+- `bio`
+- `avatar_url`
+
+## Endpoints
+
+Base sugerida: `/`
+
+### Autenticacao
+
+- `POST /login/` -> gera `access` e `refresh`
+- `POST /logout/` -> invalida `refresh` token (blacklist)
+- `POST /refresh/` -> renova o token de acesso
+
+### Documentacao
+
+- `GET /schema/` -> schema OpenAPI
+- `GET /docs/` -> Swagger UI
+
+### Usuarios
+
+- `POST /users/` -> cria um novo usuario
+- `GET /users/` -> lista usuarios, apenas para `admin`
+- `GET /users/?profile__user_type=aluno` -> filtra por tipo de perfil
+- `GET /users/?search=student` -> busca por username/email/nome
+- `GET /users/?ordering=username` -> ordena resultados
+- `GET /users/{id}/` -> detalhe do usuario
+- `PATCH /users/{id}/` -> atualiza usuario
+- `DELETE /users/{id}/` -> remove usuario, apenas para `admin`
+- `GET /users/me/` -> retorna o usuario autenticado
+- `PATCH /users/me/` -> atualiza o proprio perfil
+
+## Exemplo de cadastro
+
+```json
+{
+  "username": "teacher",
+  "password": "Teacher123!",
+  "email": "teacher@example.com",
+  "first_name": "Ada",
+  "last_name": "Lovelace",
+  "profile": {
+    "user_type": "professor",
+    "phone": "11999999999",
+    "birth_date": "1990-10-15",
+    "bio": "Docente de matematica.",
+    "avatar_url": "https://example.com/avatar.png"
+  }
+}
+```
+
+## Exemplo de login
+
+### Requisicao
+
+```json
+{
+  "username": "teacher",
+  "password": "Teacher123!"
+}
+```
+
+### Resposta
+
+```json
+{
+  "refresh": "seu-refresh-token",
+  "access": "seu-access-token"
+}
+```
+
+## Como rodar localmente
+
+### 1. Criar e ativar ambiente virtual
+
+```bash
+python -m venv .venv
+```
+
+No Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+No Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### 2. Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configurar variaveis de ambiente
+
+Use o arquivo de exemplo como base:
+
+```bash
+copy .env.example .env
+```
+
+### 4. Criar migracoes
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 5. Criar superusuario
+
+```bash
+python manage.py createsuperuser
+```
+
+### 6. Rodar o servidor
+
+```bash
+python manage.py runserver
+```
+
+Por padrao o projeto usa `config.settings.dev`.
+
+Para rodar com outro ambiente:
+
+```bash
+$env:DJANGO_SETTINGS_MODULE="config.settings.prod"
+python manage.py runserver
+```
+
+## Configuracao JWT
+
+O projeto usa `JWTAuthentication` como autenticacao padrao no DRF.
+
+Se quiser acessar rotas protegidas, envie o token no header:
+
+```text
+Authorization: Bearer seu-access-token
+```
+
+Para fazer logout (blacklist), envie o `refresh` token:
+
+```json
+{
+  "refresh": "seu-refresh-token"
+}
+```
+
+## Seguranca e configuracao
+
+- `prod.py` exige `DJANGO_SECRET_KEY` e `DJANGO_ALLOWED_HOSTS`
+- HTTPS forcado em producao com `SECURE_SSL_REDIRECT`
+- Cookies de sessao e CSRF marcados como `secure` em producao
+- HSTS habilitado em producao
+- Throttle configurado para reduzir abuso de login e flooding
+- Tokens JWT com expiracao configuravel, rotacao e blacklist
+- Carregamento de `.env` nativo para facilitar setup seguro
+- Resposta de erro padronizada para facilitar debug e frontend
+
+## Permissoes
+
+- Usuarios nao autenticados podem se cadastrar
+- Usuarios comuns podem visualizar e editar apenas os proprios dados
+- Usuarios `admin` podem listar e gerenciar todos os usuarios
+- Apenas administradores podem criar ou promover usuarios com `user_type = admin`
+
 ## Testes
+
+Para executar os testes:
 
 ```bash
 python manage.py test
 ```
 
+## Proximos passos
+
+- Adicionar filtros e busca
+- Criar endpoints para dominio escolar, como turmas, disciplinas e matriculas
+
 ## Licenca
 
-MIT. Veja `LICENSE`.
+Este projeto usa a licenca MIT. Veja [LICENSE](LICENSE).
+
+## Autor
+
+Projeto pronto para evoluir como base de autenticacao e gerenciamento de usuarios em APIs Django.
